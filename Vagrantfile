@@ -13,45 +13,30 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "shell", path: "scripts/bootstrap.sh"
 
-  # NodeCount = 3
+  NodeCount = 1
 
-  # # OSD nodes
-  # (1..NodeCount).each do |i|
-  #   config.vm.define "ceph_osd#{i}" do |osd|
-  #     osd.vm.box = "centos/7"
-  #     osd.vm.hostname = "osd#{i}.local"
-  #     osd.vm.network "private_network", ip: "10.0.15.2#{i}"
-  #     osd.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
-  #     osd.vm.disk :disk, name: "data", size: "20GB"
+  # OSD nodes
+  (1..NodeCount).each do |i|
+    config.vm.define "cephosd#{i}" do |osd|
+      osd.vm.box = "centos/7"
+      osd.vm.hostname = "osd#{i}"
+      osd.vm.network "private_network", ip: "10.0.15.2#{i}"
+      osd.vm.disk :disk, primary: true, size: "8GB", name: "main"
+      osd.vm.disk :disk, size: "15GB", name: "data"
+      osd.vm.provision "shell", path: "scripts/ceph-osd.sh"
+      osd.vm.provider "virtualbox" do |v|
+        v.name = "cephosd#{i}"
+        v.memory = 2048
+        v.cpus = 2
+        v.gui = false
+      end
+    end
+  end
 
-  #     osd.vm.provider "virtualbox" do |v|
-  #       v.name = "ceph_osd_#{i}"
-  #       v.memory = 2048
-  #       v.cpus = 2
-  #       v.gui = false
-  #     end
-  #   end
-  # end
-
-  # # Ceph Admin
-  # config.vm.define "cephdmin" do |cephdmin|
-  #   cephdmin.vm.box = "centos/7"
-  #   cephdmin.vm.hostname = "cephadmin.local"
-  #   cephdmin.vm.network "private_network", ip: "10.0.15.10"
-  #   cephdmin.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
-
-  #   cephdmin.vm.provider "virtualbox" do |v|
-  #     v.name = "cephdmin"
-  #     v.memory = 2048
-  #     v.cpus = 2
-  #     v.gui = false
-  #   end
-  # end
-  
   # Ceph MON
   config.vm.define "mon" do |mon|
     mon.vm.box = "centos/7"
-    mon.vm.hostname = "cephmon.local"
+    mon.vm.hostname = "mon1"
     mon.vm.network "private_network", ip: "10.0.15.11"
     mon.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
 
@@ -62,6 +47,34 @@ Vagrant.configure(2) do |config|
       v.gui = false
     end
   end
-  
 
+  # Ceph client
+  config.vm.define "client" do |client|
+    client.vm.box = "centos/7"
+    client.vm.hostname = "client"
+    client.vm.network "private_network", ip: "10.0.15.15"
+    client.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
+
+    client.vm.provider "virtualbox" do |v|
+      v.name = "cephclient"
+      v.memory = 2048
+      v.cpus = 2
+      v.gui = false
+    end
+  end
+
+  # Ceph Admin. The admin node is used for installing and configuring all cluster nodes
+  config.vm.define "cephadmin" do |cephadmin|
+    cephadmin.vm.box = "centos/7"
+    cephadmin.vm.hostname = "cephadmin"
+    cephadmin.vm.network "private_network", ip: "10.0.15.10"
+    cephadmin.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
+    cephadmin.vm.provider "virtualbox" do |v|
+      v.name = "cephadmin"
+      v.memory = 2048
+      v.cpus = 2
+      v.gui = false
+    end
+  end
+  
 end
