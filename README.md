@@ -7,3 +7,6 @@ Configure Ceph Client Node
 https://www.howtoforge.com/tutorial/using-ceph-as-block-device-on-centos-7/
 
 vagrant plugin install vagrant-disksize
+
+make_user_gen_ssh.sh
+https://gist.github.com/robmsmt/b8300e7a0d711a7616e948a8232289a5

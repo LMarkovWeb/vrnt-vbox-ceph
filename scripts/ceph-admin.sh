@@ -2,38 +2,6 @@
 
 
 
-cat <<EOF
-Host ceph-admin
-        Hostname ceph-admin
-        User cephuser
- 
-Host mon1
-        Hostname mon1
-        User cephuser
- 
-Host osd1
-        Hostname osd1
-        User cephuser
- 
-Host osd2
-        Hostname osd2
-        User cephuser
- 
-Host osd3
-        Hostname osd3
-        User cephuser
- 
-Host client
-        Hostname client
-        User cephuser
-EOF
-
-# Настройка SSH
-
-# так же добавить и для клиента
-#ssh-copy-id client
-
-
 # Step 5 - Build the Ceph Cluster
 
 # su - cephuser

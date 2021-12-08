@@ -6,11 +6,13 @@ ENV['VAGRANT_EXPERIMENTAL'] = 'disks'
 
 Vagrant.configure(2) do |config|
 
+  # keys
   config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/me.pub"
   config.vm.provision "shell", inline: <<-SHELL
     cat /home/vagrant/.ssh/me.pub >> /home/vagrant/.ssh/authorized_keys
   SHELL
 
+  # shell
   config.vm.provision "shell", path: "scripts/bootstrap.sh"
 
   NodeCount = 1
@@ -21,15 +23,19 @@ Vagrant.configure(2) do |config|
       osd.vm.box = "centos/7"
       osd.vm.hostname = "osd#{i}"
       osd.vm.network "private_network", ip: "10.0.15.2#{i}"
-      osd.vm.disk :disk, primary: true, size: "8GB", name: "main"
-      osd.vm.disk :disk, size: "15GB", name: "data"
-      osd.vm.provision "shell", path: "scripts/ceph-osd.sh"
+      osd.vm.disk :disk, size: "5GB", name: "data"
       osd.vm.provider "virtualbox" do |v|
         v.name = "cephosd#{i}"
         v.memory = 2048
         v.cpus = 2
         v.gui = false
       end
+      #shell
+      osd.vm.provision "shell", path: "scripts/ceph-osd.sh"
+      osd.vm.provision "file", source: "cephuser_keys/cephadmin.pub", destination: "~/.ssh/cephadmin.pub"
+      osd.vm.provision "shell", inline: <<-SHELL
+        cat /home/vagrant/.ssh/cephadmin.pub >> /home/cephuser/.ssh/authorized_keys
+      SHELL
     end
   end
 
@@ -38,8 +44,6 @@ Vagrant.configure(2) do |config|
     mon.vm.box = "centos/7"
     mon.vm.hostname = "mon1"
     mon.vm.network "private_network", ip: "10.0.15.11"
-    mon.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
-
     mon.vm.provider "virtualbox" do |v|
       v.name = "cephmon"
       v.memory = 2048
@@ -53,8 +57,6 @@ Vagrant.configure(2) do |config|
     client.vm.box = "centos/7"
     client.vm.hostname = "client"
     client.vm.network "private_network", ip: "10.0.15.15"
-    client.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
-
     client.vm.provider "virtualbox" do |v|
       v.name = "cephclient"
       v.memory = 2048
@@ -68,13 +70,20 @@ Vagrant.configure(2) do |config|
     cephadmin.vm.box = "centos/7"
     cephadmin.vm.hostname = "cephadmin"
     cephadmin.vm.network "private_network", ip: "10.0.15.10"
-    cephadmin.vm.disk :disk, name: "main", primary: 'yes', size: "10GB"
     cephadmin.vm.provider "virtualbox" do |v|
       v.name = "cephadmin"
       v.memory = 2048
       v.cpus = 2
       v.gui = false
     end
+    # shell
+    cephadmin.vm.provision "file", source: "cephuser_keys/cephadmin.pub", destination: "~/.ssh/cephadmin.pub"
+    cephadmin.vm.provision "file", source: "cephuser_keys/cephadmin", destination: "~/.ssh/cephadmin"
+    cephadmin.vm.provision "shell", inline: <<-SHELL
+      mv /home/vagrant/.ssh/cephadmin.pub /home/cephuser/.ssh
+      mv /home/vagrant/.ssh/cephadmin /home/cephuser/.ssh
+    SHELL
+    cephadmin.vm.provision "shell", path: "scripts/ceph-admin-ssh.sh"
   end
   
 end
