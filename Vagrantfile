@@ -14,8 +14,12 @@ Vagrant.configure(2) do |config|
 
   # shell
   config.vm.provision "shell", path: "scripts/bootstrap.sh"
+  config.vm.provision "file", source: "cephuser_keys/authorized_keys", destination: "~/.ssh/authKeys"
+  config.vm.provision "shell", inline: <<-SHELL
+    cat /home/vagrant/.ssh/authKeys >> /home/cephuser/.ssh/authorized_keys
+  SHELL
 
-  NodeCount = 1
+  NodeCount = 3
 
   # OSD nodes
   (1..NodeCount).each do |i|
@@ -32,10 +36,6 @@ Vagrant.configure(2) do |config|
       end
       #shell
       osd.vm.provision "shell", path: "scripts/ceph-osd.sh"
-      osd.vm.provision "file", source: "cephuser_keys/cephadmin.pub", destination: "~/.ssh/cephadmin.pub"
-      osd.vm.provision "shell", inline: <<-SHELL
-        cat /home/vagrant/.ssh/cephadmin.pub >> /home/cephuser/.ssh/authorized_keys
-      SHELL
     end
   end
 
@@ -50,6 +50,8 @@ Vagrant.configure(2) do |config|
       v.cpus = 2
       v.gui = false
     end
+    #shell
+    mon.vm.provision "shell", path: "scripts/ceph-mon.sh"
   end
 
   # Ceph client
@@ -63,6 +65,8 @@ Vagrant.configure(2) do |config|
       v.cpus = 2
       v.gui = false
     end
+    #shell
+    client.vm.provision "shell", path: "scripts/ceph-client.sh"
   end
 
   # Ceph Admin. The admin node is used for installing and configuring all cluster nodes
@@ -77,11 +81,11 @@ Vagrant.configure(2) do |config|
       v.gui = false
     end
     # shell
-    cephadmin.vm.provision "file", source: "cephuser_keys/cephadmin.pub", destination: "~/.ssh/cephadmin.pub"
-    cephadmin.vm.provision "file", source: "cephuser_keys/cephadmin", destination: "~/.ssh/cephadmin"
+    cephadmin.vm.provision "file", source: "cephuser_keys/id_rsa.pub", destination: "~/.ssh/cephuser_id_rsa.pub"
+    cephadmin.vm.provision "file", source: "cephuser_keys/id_rsa", destination: "~/.ssh/cephuser_id_rsa"
     cephadmin.vm.provision "shell", inline: <<-SHELL
-      mv /home/vagrant/.ssh/cephadmin.pub /home/cephuser/.ssh
-      mv /home/vagrant/.ssh/cephadmin /home/cephuser/.ssh
+      cat /home/vagrant/.ssh/cephuser_id_rsa.pub > /home/cephuser/.ssh/id_rsa.pub
+      cat /home/vagrant/.ssh/cephuser_id_rsa > /home/cephuser/.ssh/id_rsa
     SHELL
     cephadmin.vm.provision "shell", path: "scripts/ceph-admin-ssh.sh"
   end

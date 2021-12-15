@@ -24,6 +24,9 @@ echo "cephuser ALL = (root) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/cephuser
 chmod 0440 /etc/sudoers.d/cephuser
 sed -i s'/Defaults requiretty/#Defaults requiretty'/g /etc/sudoers
 mkdir -p /home/cephuser/.ssh/
+touch /home/cephuser/.ssh/authorized_keys
+chown cephuser:cephuser -R /home/cephuser
+
 echo "[TASK 5] Disable SELinux"
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
